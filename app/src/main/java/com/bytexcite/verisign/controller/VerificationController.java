@@ -1,16 +1,13 @@
 package com.bytexcite.verisign.controller;
 
-import android.util.Log;
-
+import co.aspirasoft.apis.rest.HttpMethod;
+import co.aspirasoft.apis.rest.HttpTask;
 import com.bytexcite.verisign.model.entity.SignatureImage;
 import com.bytexcite.verisign.model.entity.VerificationRequest;
 import com.bytexcite.verisign.model.entity.VerificationResponse;
 import com.bytexcite.verisign.util.WebServer;
 
 import java.net.MalformedURLException;
-
-import sfllhkhan95.android.rest.HttpMethod;
-import sfllhkhan95.android.rest.HttpRequest;
 
 
 /**
@@ -29,23 +26,12 @@ public class VerificationController {
     public VerificationController() throws MalformedURLException {
     }
 
-    public HttpRequest<VerificationResponse> getVerificationRequest(
+    public HttpTask<VerificationRequest, VerificationResponse> getVerificationRequest(
             String customerID, SignatureImage signatureImage) {
-        return new VerifyRequest(new VerificationRequest(customerID, signatureImage));
-    }
-
-    private class VerifyRequest extends HttpRequest<VerificationResponse> {
-
-        VerifyRequest(VerificationRequest request) {
-            super(server, "VerificationController.php", VerificationResponse.class);
-            setMethod(HttpMethod.POST);
-            setPayload(request);
-        }
-
-        @Override
-        protected void onExecuteFailed(Exception ex) {
-            ex.printStackTrace();
-            Log.e("DroidREST", ex.getMessage());
-        }
+        return new HttpTask.Builder<VerificationRequest, VerificationResponse>(VerificationResponse.class)
+                .setRequestUrl("VerificationController.php")
+                .setMethod(HttpMethod.POST)
+                .setPayload(new VerificationRequest(customerID, signatureImage))
+                .create(server);
     }
 }

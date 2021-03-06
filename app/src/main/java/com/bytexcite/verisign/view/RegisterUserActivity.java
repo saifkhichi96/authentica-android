@@ -10,13 +10,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import co.aspirasoft.apis.rest.ResponseListener;
 import com.bytexcite.verisign.R;
 import com.bytexcite.verisign.controller.RegistrationController;
 import com.bytexcite.verisign.model.entity.RegistrationResponse;
@@ -27,36 +27,34 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import sfllhkhan95.android.rest.ResponseHandler;
-
 public class RegisterUserActivity extends AppCompatActivity
-        implements View.OnClickListener, ResponseHandler<RegistrationResponse> {
+        implements View.OnClickListener, ResponseListener<RegistrationResponse> {
 
     private static final int REQUEST_PICK_IMAGE = 1;
     private static final int REQUEST_TAKE_IMAGE = 2;
 
-    private int[] signatureRes = new int[]{
+    private final int[] signatureRes = new int[]{
             R.id.sigantureImage1,
             R.id.sigantureImage2,
             R.id.sigantureImage3,
             R.id.sigantureImage4
     };
 
-    private int[] loadingRes = new int[]{
+    private final int[] loadingRes = new int[]{
             R.id.loadingSign1,
             R.id.loadingSign2,
             R.id.loadingSign3,
             R.id.loadingSign4
     };
 
-    private int[] loadedRes = new int[]{
+    private final int[] loadedRes = new int[]{
             R.id.loadingComplete1,
             R.id.loadingComplete2,
             R.id.loadingComplete3,
             R.id.loadingComplete4
     };
 
-    private boolean[] isLoaded = new boolean[]{
+    private final boolean[] isLoaded = new boolean[]{
             false,
             false,
             false,
@@ -64,7 +62,7 @@ public class RegisterUserActivity extends AppCompatActivity
     };
 
     private int activeSignature;
-    private SignatureImage[] signatures = new SignatureImage[4];
+    private final SignatureImage[] signatures = new SignatureImage[4];
     private boolean isLoading = false;
 
     private File mPhotoFile;
@@ -93,7 +91,7 @@ public class RegisterUserActivity extends AppCompatActivity
             case REQUEST_PICK_IMAGE:
                 if (resultCode == RESULT_OK && null != data) {
                     // Show selected image
-                    ImageView signatureView = (ImageView) findViewById(signatureRes[activeSignature]);
+                    ImageView signatureView = findViewById(signatureRes[activeSignature]);
 
                     Uri selectedImageUri = data.getData();
                     signatureView.setImageURI(selectedImageUri);
@@ -108,7 +106,7 @@ public class RegisterUserActivity extends AppCompatActivity
                     bitmap = BitmapFactory.decodeFile(mPhotoFile.getAbsolutePath());
 
                     // Show selected image
-                    ImageView signatureView = (ImageView) findViewById(signatureRes[activeSignature]);
+                    ImageView signatureView = findViewById(signatureRes[activeSignature]);
                     signatureView.setImageBitmap(bitmap);
                 }
                 break;
@@ -196,7 +194,7 @@ public class RegisterUserActivity extends AppCompatActivity
 
                         // Send verification request
                         controller.getRegistrationRequest(userId, signatures)
-                                .sendRequest(RegisterUserActivity.this);
+                                .startAsync(RegisterUserActivity.this);
                     } catch (MalformedURLException e) {
                         e.printStackTrace();
                     }
@@ -230,32 +228,33 @@ public class RegisterUserActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResponseReceived(@Nullable RegistrationResponse response) {
+    public void onRequestSuccessful(@NonNull RegistrationResponse response) {
         findViewById(R.id.loadingSign1).setVisibility(View.GONE);
         findViewById(R.id.loadingSign2).setVisibility(View.GONE);
         findViewById(R.id.loadingSign3).setVisibility(View.GONE);
         findViewById(R.id.loadingSign4).setVisibility(View.GONE);
 
-        if (response != null) {
-            if (!response.isSuccessful()) {
-                new AlertDialog.Builder(RegisterUserActivity.this)
-                        .setTitle("FAILURE")
-                        .setMessage("New user could not be registered. Please make sure that user ID is unique.")
-                        .create()
-                        .show();
-            } else {
-                new AlertDialog.Builder(RegisterUserActivity.this)
-                        .setTitle("SUCCESS")
-                        .setMessage("New user successfully registered. You can now verify their signatures.")
-                        .create()
-                        .show();
-            }
+        if (!response.isSuccessful()) {
+            new AlertDialog.Builder(RegisterUserActivity.this)
+                    .setTitle("FAILURE")
+                    .setMessage("New user could not be registered. Please make sure that user ID is unique.")
+                    .create()
+                    .show();
         } else {
             new AlertDialog.Builder(RegisterUserActivity.this)
-                    .setMessage("User registration failed. Please try again.")
+                    .setTitle("SUCCESS")
+                    .setMessage("New user successfully registered. You can now verify their signatures.")
                     .create()
                     .show();
         }
+    }
+
+    @Override
+    public void onRequestFailed(@NonNull Exception ex) {
+        new AlertDialog.Builder(RegisterUserActivity.this)
+                .setMessage("User registration failed. Please try again.")
+                .create()
+                .show();
     }
 
     private void selectSignature(int signatureIndex) {
@@ -280,7 +279,7 @@ public class RegisterUserActivity extends AppCompatActivity
      * @return output file
      * @throws RuntimeException execption thrown if output file cannot be created
      */
-    @Nullable
+    @NonNull
     private File createImageFile() throws IOException {
         // Create a directory name for image storage
         File mediaStorageDir = new File(
@@ -331,5 +330,4 @@ public class RegisterUserActivity extends AppCompatActivity
         finish();
         startActivity(new Intent(this, LoginActivity.class));
     }
-
 }

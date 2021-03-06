@@ -10,14 +10,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import co.aspirasoft.apis.rest.ResponseListener;
 import com.bytexcite.verisign.R;
 import com.bytexcite.verisign.controller.VerificationController;
 import com.bytexcite.verisign.model.entity.SessionData;
@@ -28,10 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import sfllhkhan95.android.rest.ResponseHandler;
-
 public class VerifySignatureActivity extends AppCompatActivity
-        implements View.OnClickListener, ResponseHandler<VerificationResponse> {
+        implements View.OnClickListener, ResponseListener<VerificationResponse> {
 
     private static final int REQUEST_PICK_IMAGE = 1;
     private static final int REQUEST_TAKE_IMAGE = 2;
@@ -64,7 +61,7 @@ public class VerifySignatureActivity extends AppCompatActivity
             case REQUEST_PICK_IMAGE:
                 if (resultCode == RESULT_OK && null != data) {
                     // Show selected image
-                    ImageView signatureView = (ImageView) findViewById(R.id.sigantureImage);
+                    ImageView signatureView = findViewById(R.id.sigantureImage);
 
                     Uri selectedImageUri = data.getData();
                     signatureView.setImageURI(selectedImageUri);
@@ -79,7 +76,7 @@ public class VerifySignatureActivity extends AppCompatActivity
                     bitmap = BitmapFactory.decodeFile(mPhotoFile.getAbsolutePath());
 
                     // Show selected image
-                    ImageView signatureView = (ImageView) findViewById(R.id.sigantureImage);
+                    ImageView signatureView = findViewById(R.id.sigantureImage);
                     signatureView.setImageBitmap(bitmap);
                 }
                 break;
@@ -174,7 +171,7 @@ public class VerifySignatureActivity extends AppCompatActivity
                         // Send verification request
                         controller
                                 .getVerificationRequest(userId, signature)
-                                .sendRequest(VerifySignatureActivity.this);
+                                .startAsync(VerifySignatureActivity.this);
                     } catch (MalformedURLException e) {
                         e.printStackTrace();
                     }
@@ -194,35 +191,35 @@ public class VerifySignatureActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResponseReceived(@Nullable VerificationResponse response) {
+    public void onRequestSuccessful(@NonNull VerificationResponse response) {
         findViewById(R.id.loadingSign).setVisibility(View.GONE);
-
-        if (response != null) {
-            if (response.getBelongsTo() == null) {
-                new AlertDialog.Builder(VerifySignatureActivity.this)
-                        .setTitle("USER NOT FOUND")
-                        .setMessage("No user with given ID registered with the system.")
-                        .create()
-                        .show();
-            } else if (!response.isGenuine()) {
-                new AlertDialog.Builder(VerifySignatureActivity.this)
-                        .setTitle("NOT GENUINE")
-                        .setMessage("The signature does not match with the saved model of this user.")
-                        .create()
-                        .show();
-            } else {
-                new AlertDialog.Builder(VerifySignatureActivity.this)
-                        .setTitle("GENUINE")
-                        .setMessage("Signature belongs to claimant '" + response.getBelongsTo().getId() + "'")
-                        .create()
-                        .show();
-            }
+        if (response.getBelongsTo() == null) {
+            new AlertDialog.Builder(VerifySignatureActivity.this)
+                    .setTitle("USER NOT FOUND")
+                    .setMessage("No user with given ID registered with the system.")
+                    .create()
+                    .show();
+        } else if (!response.isGenuine()) {
+            new AlertDialog.Builder(VerifySignatureActivity.this)
+                    .setTitle("NOT GENUINE")
+                    .setMessage("The signature does not match with the saved model of this user.")
+                    .create()
+                    .show();
         } else {
             new AlertDialog.Builder(VerifySignatureActivity.this)
-                    .setMessage("Signature verification failed. Please try again.")
+                    .setTitle("GENUINE")
+                    .setMessage("Signature belongs to claimant '" + response.getBelongsTo().getId() + "'")
                     .create()
                     .show();
         }
+    }
+
+    @Override
+    public void onRequestFailed(@NonNull Exception ex) {
+        new AlertDialog.Builder(VerifySignatureActivity.this)
+                .setMessage("Signature verification failed. Please try again.")
+                .create()
+                .show();
     }
 
     /**

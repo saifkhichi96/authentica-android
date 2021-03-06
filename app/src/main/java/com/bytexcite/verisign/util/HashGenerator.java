@@ -1,7 +1,10 @@
 package com.bytexcite.verisign.util;
 
+import android.os.Build;
+
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -17,7 +20,12 @@ public class HashGenerator {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("MD5");
-            digest.update(s.getBytes(Charset.forName("US-ASCII")), 0, s.length());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                digest.update(s.getBytes(StandardCharsets.US_ASCII), 0, s.length());
+            }
+            else {
+                digest.update(s.getBytes(Charset.forName("US-ASCII")), 0, s.length());
+            }
             byte[] magnitude = digest.digest();
             BigInteger bi = new BigInteger(1, magnitude);
             return String.format("%0" + (magnitude.length << 1) + "x", bi);

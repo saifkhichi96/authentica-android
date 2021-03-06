@@ -12,11 +12,11 @@ public class RegistrationResponse {
     private boolean successful;
 
     public boolean isSuccessful() {
-        return successful;
+        return this.successful;
     }
 
     public void setSuccessful(boolean successful) {
-        successful = successful;
+        this.successful = successful;
     }
 
 }

@@ -14,11 +14,11 @@ public class VerificationResponse {
     private Customer belongsTo;
 
     public boolean isGenuine() {
-        return genuine;
+        return this.genuine;
     }
 
     public void setGenuine(boolean genuine) {
-        genuine = genuine;
+        this.genuine = genuine;
     }
 
     public Customer getBelongsTo() {

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -48,12 +49,12 @@ public class LaunchScreen extends AppCompatActivity {
     }
 
     private boolean checkPermissions() {
-        if (!isGranted(Manifest.permission.CAMERA) || !isGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            if (!isGranted(Manifest.permission.CAMERA)) {
+        if (isNotGranted(Manifest.permission.CAMERA) || isNotGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            if (isNotGranted(Manifest.permission.CAMERA)) {
                 requestPermission(Manifest.permission.CAMERA, CAMERA_PERMISSION_TAG);
             }
 
-            if (!isGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            if (isNotGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_TAG);
             }
             return false;
@@ -62,8 +63,8 @@ public class LaunchScreen extends AppCompatActivity {
         return true;
     }
 
-    private boolean isGranted(String permission) {
-        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    private boolean isNotGranted(String permission) {
+        return ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestPermission(String permission, int tag) {
@@ -71,7 +72,7 @@ public class LaunchScreen extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case CAMERA_PERMISSION_TAG:
             case STORAGE_PERMISSION_TAG:
@@ -89,9 +90,9 @@ public class LaunchScreen extends AppCompatActivity {
 
         private final long delay;
 
-        private Intent showLoginForm;
-        private Intent showMainMenu;
-        private Intent launchVerificationScreen;
+        private final Intent showLoginForm;
+        private final Intent showMainMenu;
+        private final Intent launchVerificationScreen;
 
         LaunchScreenController(long delay) {
             this.delay = delay;
@@ -138,6 +139,10 @@ public class LaunchScreen extends AppCompatActivity {
                                             );
                                         }
                                     }, delay);
+                                } else {
+                                    CharSequence error = task.getException().getMessage();
+                                    Toast.makeText(LaunchScreen.this, error, Toast.LENGTH_LONG).show();
+                                    finish();
                                 }
                             }
                         });

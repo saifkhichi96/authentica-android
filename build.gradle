@@ -4,6 +4,9 @@ buildscript {
     repositories {
         jcenter()
         google()
+        maven {
+            url  "https://dl.bintray.com/saifkhichi96/maven"
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.2'
@@ -15,6 +18,9 @@ allprojects {
     repositories {
         jcenter()
         google()
+        maven {
+            url  "https://dl.bintray.com/saifkhichi96/maven"
+        }
     }
 }
 

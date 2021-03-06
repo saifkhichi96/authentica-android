@@ -2,23 +2,23 @@ package com.bytexcite.verisign.view;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import co.aspirasoft.apis.rest.HttpTask;
+import co.aspirasoft.apis.rest.ResponseListener;
 import com.bytexcite.verisign.R;
 import com.bytexcite.verisign.model.dao.StaffDao;
+import com.bytexcite.verisign.model.entity.Credentials;
 import com.bytexcite.verisign.model.entity.SessionData;
 import com.bytexcite.verisign.model.entity.Staff;
 import com.bytexcite.verisign.util.HashGenerator;
 
 import java.net.MalformedURLException;
-
-import sfllhkhan95.android.rest.HttpRequest;
-import sfllhkhan95.android.rest.ResponseListener;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -40,9 +40,9 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         sessionData = SessionData.getInstance(this);
 
-        username = (EditText) findViewById(R.id.username);
-        password = (EditText) findViewById(R.id.password);
-        rootView = (ViewGroup) findViewById(R.id.activity_login);
+        username = findViewById(R.id.username);
+        password = findViewById(R.id.password);
+        rootView = findViewById(R.id.activity_login);
 
         credentialsError = getString(R.string.credentialsError);
         signInFailure = getString(R.string.signInFailure);
@@ -103,12 +103,12 @@ public class LoginActivity extends AppCompatActivity {
             String p = loginActivity.getPassword();
 
             if (isValid(u) && isValid(p)) {
-                HttpRequest<Staff> request = staffDao.getFetchRequest(
+                HttpTask<Credentials, Staff> request = staffDao.getFetchRequest(
                         loginActivity.getUsername(),
                         HashGenerator.md5(loginActivity.getPassword())
                 );
-                request.showStatus(loginActivity.getRootView());
-                request.sendRequest(this);
+                // TODO: request.showStatus(loginActivity.getRootView());
+                request.startAsync(this);
             } else {
                 loginActivity.credentialsError();
             }
@@ -119,13 +119,13 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onRequestSuccessful(Staff staff) {
+        public void onRequestSuccessful(@NonNull Staff staff) {
             sessionData.createSession(staff);
             loginActivity.signInSuccess();
         }
 
         @Override
-        public void onRequestFailed() {
+        public void onRequestFailed(@NonNull Exception ex) {
             loginActivity.signInFailure();
         }
     }

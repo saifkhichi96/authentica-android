@@ -1,18 +1,11 @@
 package com.bytexcite.verisign.controller;
 
-import android.util.Log;
-
-import com.bytexcite.verisign.model.entity.RegistrationRequest;
-import com.bytexcite.verisign.model.entity.RegistrationResponse;
-import com.bytexcite.verisign.model.entity.SignatureImage;
-import com.bytexcite.verisign.model.entity.VerificationRequest;
-import com.bytexcite.verisign.model.entity.VerificationResponse;
+import co.aspirasoft.apis.rest.HttpMethod;
+import co.aspirasoft.apis.rest.HttpTask;
+import com.bytexcite.verisign.model.entity.*;
 import com.bytexcite.verisign.util.WebServer;
 
 import java.net.MalformedURLException;
-
-import sfllhkhan95.android.rest.HttpMethod;
-import sfllhkhan95.android.rest.HttpRequest;
 
 
 /**
@@ -26,30 +19,19 @@ import sfllhkhan95.android.rest.HttpRequest;
  */
 public class RegistrationController {
 
-    private WebServer server = new WebServer();
+    private final WebServer server = new WebServer();
 
     public RegistrationController() throws MalformedURLException {
     }
 
-    public HttpRequest<RegistrationResponse> getRegistrationRequest(
+    public HttpTask<RegistrationRequest, RegistrationResponse> getRegistrationRequest(
             String customerID, SignatureImage[] refSigns) {
-        RegistrationRequest r;
-        r = new RegistrationRequest(customerID, refSigns[0], refSigns[1], refSigns[2], refSigns[3]);
-        return new RegisterRequest(r);
-    }
+        RegistrationRequest request = new RegistrationRequest(customerID, refSigns[0], refSigns[1], refSigns[2], refSigns[3]);
 
-    private class RegisterRequest extends HttpRequest<RegistrationResponse> {
-
-        RegisterRequest(RegistrationRequest request) {
-            super(server, "RegistrationController.php", RegistrationResponse.class);
-            setMethod(HttpMethod.POST);
-            setPayload(request);
-        }
-
-        @Override
-        protected void onExecuteFailed(Exception ex) {
-            ex.printStackTrace();
-            Log.e("DroidREST", ex.getMessage());
-        }
+        HttpTask.Builder<RegistrationRequest, RegistrationResponse> builder = new HttpTask.Builder<>(RegistrationResponse.class);
+        builder.setMethod(HttpMethod.POST);
+        builder.setPayload(request);
+        builder.setRequestUrl("RegistrationController.php");
+        return builder.create(server);
     }
 }
